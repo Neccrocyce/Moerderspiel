@@ -21,7 +21,8 @@ public class TcpSocketClientTest{
 			out.write("test2\n");
 			out.write("test3\n");
 			out.flush();
-			while (socket.isConnected()) {}
+			socket.close();
+//			while (socket.isConnected()) {}
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
