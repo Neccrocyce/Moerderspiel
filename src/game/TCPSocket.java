@@ -54,6 +54,7 @@ public class TCPSocket {
 			} catch (IOException e) {
 				break;
 			}
+			
 			if (tmp == null) {
 				break;
 			}
