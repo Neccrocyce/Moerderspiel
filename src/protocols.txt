@@ -1,0 +1,46 @@
+
+Connection:
+------------
+<- join (name, seed)
+-> accept and wait (true)
+-> start (target)
+
+<- update
+-> 	target
+	alive (name1, name2, ...)
+	dead ((name, timeOfDeath, murderedByPerson, murderedByObject), ...)
+
+<- getMurdered (name, murderer)
+-> isMurderer (true/ false) 
+
+console:
+--------
+newgame 		-> starts a new game and waits for players
+start [details]	-> starts the game; details: shows who has to murder who person
+pause			-> pauses the game and saves it
+continue		-> continue the paused game
+quit			-> quits the game
+info [details]	-> shows infos (alive and dead players)
+help			-> lists all commands
+
+
+
+
+
+
+
+
+
+
+
+app style:
+target
+xxx
+
+alive:
+xxx
+xxx
+
+dead:
+xxx by xxx
+xxx "
