@@ -1,9 +1,10 @@
 package shuffle;
 
+import game.Person;
 
 public class MergeShuffle {
 	
-	public static void shuffle (int[] o, boolean[] seed) {
+	public static void shuffle (Person[] o, boolean[] seed) {
 		mergeShuffle(o, 0, o.length - 1, seed);
 	}
 	
@@ -11,7 +12,7 @@ public class MergeShuffle {
 		mergeSort(o, 0, o.length - 1);
 	}
 	
-	private static void mergeShuffle (int[] o, int l, int r, boolean[] seed) {
+	private static void mergeShuffle (Person[] o, int l, int r, boolean[] seed) {
 		if (l == r) {
 			return; 
 		}
@@ -20,7 +21,7 @@ public class MergeShuffle {
 		mergeShuffle(o, m + 1, r, seed); 
 		int j = l;
 		int k = m + 1;
-		int[] b = new int[o.length];
+		Person[] b = new Person[o.length];
 		for (int i = 0; i <= r - l; i++) {
 			if (j > m) {
 				b[i] = o[k];

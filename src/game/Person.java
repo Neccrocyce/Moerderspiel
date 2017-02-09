@@ -1,23 +1,37 @@
 package game;
 
+import java.io.Serializable;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Person {
+public class Person implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String name;
+	private int seed;
+	
 	private Person target;
+	
 	private boolean alive;
 	private Date timeOfDeath;
-	private int seed;
 	private Person murderedByPerson;
 	private String murderedByObject;
 	
-	public Person(String name) {
+	
+	
+	public Person(String name, int seed) {
 		this.name = name;
 		alive = true;
+		this.seed = seed;
 	}
 	
+	public Person(String name) {
+		this(name, 0);
+	}
+
 	public String getName() {
 		return name;
 	}

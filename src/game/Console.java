@@ -28,8 +28,30 @@ public class Console {
 		String[] cmds = cmd.split(" ");
 		//newgame
 		if (cmds[0].equals(commands[0].getCommand())) {
-			
+			if (Game.getInstance().getStatus() != 0) {
+				System.out.println("Not possible! Game status has to be changed first");
+				return;
+			}
+			Game.getInstance().newGame();
+			return;
 		}
+		//start
+		if (cmds[0].equals(commands[1].getCommand())) {
+			if (Game.getInstance().getStatus() != 1) {
+				System.out.println("Not possible! Game status has to be changed first");
+				return;
+			}
+			Game.getInstance().start();
+			if (cmds.length == 2 && cmds[1].equals(commands[1].getParameter())) {
+				for (Person p : Game.getInstance().getPersons()) {
+					System.out.println(p.getName() + "(" + p.getSeed() + ") -> " + p.getTarget().getName());
+				}
+			}
+			return;
+		}
+		//pause
+		
+		
 	}
 	
 	public void read () {
@@ -41,5 +63,6 @@ public class Console {
 				break;
 			}
 		}
+		s.close();
 	}
 }

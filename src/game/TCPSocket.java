@@ -1,11 +1,13 @@
 package game;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class TCPSocket extends Thread {
 	private static TCPSocket instance = null;
@@ -35,34 +37,52 @@ public class TCPSocket extends Thread {
 	}
 	
 	public void receive (Socket client) {
-		try {
-			client.setSoTimeout(5000);
-		} catch (SocketException e) {
-			
-		}
 		BufferedReader in = null;
-		try {
-			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		String msg = "";
 		
-		while (true) {
-			String tmp = null;
-			try {
+		try {
+			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+			client.setSoTimeout(5000);
+			
+			while (true) {
+				String tmp = null;
 				tmp = in.readLine();
-			} catch (IOException e) {
-				break;
+				
+				if (tmp == null) {
+					break;
+				}
+				msg += tmp + "\n";
 			}
 			
-			if (tmp == null) {
-				break;
-			}
-			msg += tmp + "\n";
+		} 
+		catch (SocketTimeoutException se) {
+			
 		}
-		System.out.println(msg);
-			
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			Game.getInstance().receivePacket(msg, client);
+		}			
+	}
+	
+	public boolean send (Socket client, String msg) {
+		BufferedWriter out;
+		try {
+			out = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+			out.write(msg);
+			out.flush();
+			out.close();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+		
 	}
 	
 	public void run () {
@@ -84,16 +104,5 @@ public class TCPSocket extends Thread {
 		this.port = port;
 	}
 	
-//	public static boolean send (Socket client, byte[] packet) {
-//		BufferedOutputStream out;
-//		try {
-//			out = new BufferedOutputStream(client.getOutputStream(), packet.length);
-//			out.write(packet, 0, packet.length);
-//			return true;
-//		} catch (IOException e) {
-//			MyLogger.logError(e.getStackTrace().toString());
-//			return false;
-//		}
-//		
-//	}
+	
 }

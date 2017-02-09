@@ -1,17 +1,19 @@
 
 Connection:
 ------------
-<- join (name, seed)
--> accept and wait (true)
--> start (target)
+<- connect: name seed
 
-<- update
--> 	target
+<- join: join
+-> accept and wait: OK				-> dont accept: FAIL "name|gameStatus|error"
+-> start (target): "target"
+
+<- update: update 
+-> 	target: target
 	alive (name1, name2, ...)
 	dead ((name, timeOfDeath, murderedByPerson, murderedByObject), ...)
 
-<- getMurdered (name, murderer)
--> isMurderer (true/ false) 
+<- getMurdered (name, murderer): die "murderer"
+-> isMurderer (true/ false): true|false
 
 console:
 --------

@@ -13,7 +13,7 @@ public class TcpSocketServerTest {
 	@Test
 	public void test() {
 		try {
-			TCPSocket.openSocket(16333);
+			TCPSocket.getInstance().openSocket(16333);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
