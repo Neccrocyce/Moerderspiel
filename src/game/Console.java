@@ -1,5 +1,7 @@
 package game;
 
+import java.util.Scanner;
+
 public class Console {
 	private final Command[] commands = new Command[] {
 			new Command("newgame", "", "Starts a new game and waits for players"),
@@ -22,11 +24,22 @@ public class Console {
 		return instance;
 	}
 	
-	public void run (String cmd) {
+	public void runCmd (String cmd) {
 		String[] cmds = cmd.split(" ");
 		//newgame
 		if (cmds[0].equals(commands[0].getCommand())) {
 			
+		}
+	}
+	
+	public void read () {
+		Scanner s = new Scanner(System.in);
+		while (true) {
+			String msg = s.nextLine();
+			runCmd(msg);
+			if (msg.equals(commands[4].getCommand())) {
+				break;
+			}
 		}
 	}
 }

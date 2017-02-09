@@ -7,12 +7,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class TCPSocket {
+public class TCPSocket extends Thread {
+	private static TCPSocket instance = null;
+	private int port;
 	
 	private TCPSocket () {
 	}
 	
-	public static void openSocket (int port) throws IOException {
+	public void openSocket (int port) throws IOException {
 		ServerSocket server = new ServerSocket(port);
 		while (true) {
 			Socket client = null;
@@ -32,7 +34,7 @@ public class TCPSocket {
 		}
 	}
 	
-	public static void receive (Socket client) {
+	public void receive (Socket client) {
 		try {
 			client.setSoTimeout(5000);
 		} catch (SocketException e) {
@@ -42,7 +44,6 @@ public class TCPSocket {
 		try {
 			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		String msg = "";
@@ -61,13 +62,26 @@ public class TCPSocket {
 			msg += tmp + "\n";
 		}
 		System.out.println(msg);
+			
+	}
+	
+	public void run () {
 		try {
-			client.close();
+			openSocket(port);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
+	}
+	
+	public static TCPSocket getInstance () {
+		if (instance == null) {
+			instance = new TCPSocket();
+		}
+		return instance;
+	}
+	
+	public void setPort (int port) {
+		this.port = port;
 	}
 	
 //	public static boolean send (Socket client, byte[] packet) {
