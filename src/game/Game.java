@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -20,16 +21,17 @@ import shuffle.SeedGenerator;
 
 public class Game {
 	private static Game instance = null;
+	private TCPSocket tcpSocket;
+	
 	/**
 	 * status of game:
-	 * 0: off, 1: newgame initiated, 2: running, 3: paused, 4: quit 
+	 * 0: off, 1: newgame initiated, 2: running, 3: paused
 	 */
 	private int status;
 	private List<Person> persons;
 	
 	private Game () {
 		status = 0;
-		persons = new ArrayList<>();
 	}
 	
 	public static Game getInstance () {
@@ -40,8 +42,10 @@ public class Game {
 	}
 	
 	public void newGame () {
+		persons = new ArrayList<>();
+		tcpSocket = new TCPSocket();
 		status = 1;
-		TCPSocket.getInstance().start();
+		tcpSocket.start();
 	}
 	
 	
@@ -64,10 +68,27 @@ public class Game {
 		status = 2;
 	}
 	
+	public void pause() {
+		save();
+		status = 3;
+	}
+	
+	public void cont () {
+		if (status == 0) {
+			load();
+		}
+		status = 2;
+	}
+	
+	public void quit () {
+		tcpSocket.closeServer();
+		status = 0;
+	}
+	
 	public Person joinPlayer (String name, int seed) {
 		Person p = new Person(name, seed);
 		persons.add(p);
-		System.out.println(name + "joined");
+		System.out.println(name + " joined");
 		return p;
 	}
 	
@@ -75,13 +96,18 @@ public class Game {
 		String[] login, cmds;
 		int seed;
 		try {
-			login = msg.split("\n")[0].split(" ");
-			cmds = msg.split("\n")[1].split(" ");
+			login = msg.split("\t")[0].split(" ");
+			cmds = msg.split("\t")[1].split(" ");
 			seed = Integer.parseInt(login[1]);
 		} 
-		catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
-			TCPSocket.getInstance().send(client, "error invalid message format");
+		catch (ArrayIndexOutOfBoundsException | NumberFormatException | NullPointerException e) {
+			tcpSocket.send(client, "error invalid message format");
 			System.err.println("Received: Invalid Message format");
+			try {
+				client.close();
+			} catch (IOException e2) {
+				
+			}
 			return;
 		}
 		 
@@ -90,7 +116,7 @@ public class Game {
 			if (status == 1) {
 				if (!existPerson(login[0])) {
 					Person p = joinPlayer(login[0], seed);
-					TCPSocket.getInstance().send(client, "OK");
+					tcpSocket.send(client, "OK");
 					
 					//wait until the game started
 					while (status == 1) {
@@ -98,16 +124,22 @@ public class Game {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {}
 					}
-					TCPSocket.getInstance().send(client, p.getTarget().getName());
+					if (status == 2) {
+						tcpSocket.send(client, p.getTarget().getName());
+					}
+					else {
+						sendFailStatus(client);
+					}
+					tcpSocket.closeConnection(client);
 				}
 				//if game started already
 				else {
-					TCPSocket.getInstance().send(client, "FAIL gamestatus");
+					sendFailStatus(client);
 				 }
 			}
 			//if the name exists already
 			else {
-				TCPSocket.getInstance().send(client, "FAIL name");
+				tcpSocket.send(client, "FAIL name");
 			}
 			break;
 		}
@@ -119,13 +151,13 @@ public class Game {
 			if (!new File(Moerderspiel.getFolder()).exists()) {
 				new File(Moerderspiel.getFolder()).mkdirs();
 			}
-			Path src = Paths.get(Moerderspiel.getFolder() + "autosave.saves");
-			Path dst = Paths.get(Moerderspiel.getFolder() + "autosave.saves.1");
-			if (new File(Moerderspiel.getFolder() + "autosave.saves").exists()) {
+			Path src = Paths.get(Moerderspiel.getFolder() + "autosave.save");
+			Path dst = Paths.get(Moerderspiel.getFolder() + "autosave.save.1");
+			if (new File(Moerderspiel.getFolder() + "autosave.save").exists()) {
 				Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 				Files.delete(src);
 			}
-			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(Moerderspiel.getFolder() + "autosave.saves"));
+			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(Moerderspiel.getFolder() + "autosave.save"));
 			for (Person person : persons) {
 				out.writeObject(person);
 			}
@@ -142,7 +174,7 @@ public class Game {
 		ObjectInputStream in = null;
 		try {
 			persons = new ArrayList<>();
-			in = new ObjectInputStream(new FileInputStream(Moerderspiel.getFolder() + "autosave.saves"));
+			in = new ObjectInputStream(new FileInputStream(Moerderspiel.getFolder() + "autosave.save"));
 			while (true) {
 				Person p = (Person) in.readObject();
 				persons.add(p);
@@ -162,6 +194,10 @@ public class Game {
 		}
 		System.out.println("Loaded Game");
 		return true;
+	}
+	
+	public void sendFailStatus (Socket socket) {
+		tcpSocket.send(socket, "FAIL gamestatus" + status);
 	}
 	
 	public int getStatus() {

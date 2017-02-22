@@ -7,67 +7,47 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
-public class TCPSocket extends Thread {
-	private static TCPSocket instance = null;
-	private int port;
+public class TCPSocket extends Thread implements Runnable {
+	private static int port;
+	private ServerSocket server;
 	
-	private TCPSocket () {
+	public TCPSocket () {
 	}
 	
-	public void openSocket (int port) throws IOException {
-		ServerSocket server = new ServerSocket(port);
+	public void openSocket () throws IOException {
+		server = new ServerSocket(port);
 		while (true) {
-			Socket client = null;
-			
 			try {
+				Socket client = null;
 				client = server.accept();
 				receive(client);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			finally {
 				if (client != null) {
-					client.close();
+					client.close();					
 				}
+			} catch (SocketException e) {
+				break;
 			}
 		}
 	}
 	
 	public void receive (Socket client) {
 		BufferedReader in = null;
-		String msg = "";
+		String msg = null;
 		
 		try {
 			in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			client.setSoTimeout(5000);
-			
-			while (true) {
-				String tmp = null;
-				tmp = in.readLine();
-				
-				if (tmp == null) {
-					break;
-				}
-				msg += tmp + "\n";
-			}
-			
+//			client.setSoTimeout(5000);			
+			msg = in.readLine();
+			Game.getInstance().receivePacket(msg, client);
 		} 
-		catch (SocketTimeoutException se) {
-			
+		catch (SocketTimeoutException e) {
+			e.printStackTrace();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
-		}
-		finally {
-			try {
-				in.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			Game.getInstance().receivePacket(msg, client);
 		}			
 	}
 	
@@ -75,33 +55,44 @@ public class TCPSocket extends Thread {
 		BufferedWriter out;
 		try {
 			out = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-			out.write(msg);
+			out.write(msg + "\n");
 			out.flush();
-			out.close();
 			return true;
 		} catch (IOException e) {
 			return false;
+		}		
+	}
+	
+	public void closeConnection (Socket client) {
+		try {
+			client.close();
+		} catch (IOException e) {
 		}
-		
 	}
 	
 	public void run () {
 		try {
-			openSocket(port);
+			openSocket();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public static TCPSocket getInstance () {
-		if (instance == null) {
-			instance = new TCPSocket();
-		}
-		return instance;
+	public static void setPort (int port) {
+		TCPSocket.port = port;
 	}
 	
-	public void setPort (int port) {
-		this.port = port;
+	public boolean closeServer () {
+		try {
+			server.close();
+		}
+		catch (NullPointerException e) {
+			return true;
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		return server.isClosed();
 	}
 	
 	

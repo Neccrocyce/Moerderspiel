@@ -46,3 +46,6 @@ xxx
 dead:
 xxx by xxx
 xxx "
+
+button:getMurdered
+button:quit

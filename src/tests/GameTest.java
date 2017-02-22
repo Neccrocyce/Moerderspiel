@@ -23,9 +23,15 @@ public class GameTest {
 		assertEquals(true, Game.getInstance().load());
 		for (int i = 0; i < p.length; i++) {
 			equalsPerson(p[i], Game.getInstance().getPersons().get(i));
-		}
-		
+		}	
 	}
+	
+	@Test
+	public void testQuit () {
+		Game.getInstance().newGame();
+		Game.getInstance().quit();
+	}
+	
 	
 	public void equalsPerson (Person exp, Person act) {
 		assertEquals(exp.getName(), act.getName());
